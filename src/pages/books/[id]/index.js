@@ -404,7 +404,7 @@ const fetchOrders = async (bookId, title) => {
         if (item.bookId?.toString() !== data._id?.toString()) return;
   
         const quantity = parseInt(item.quantity || 0);
-        const itemPrice = parseFloat(item.price || 0);
+        const itemPrice = parseFloat(item.price|| data.price || 0);
         const totalAmount = itemPrice * quantity; // precise total
   
         if (!summary[platform]) {
