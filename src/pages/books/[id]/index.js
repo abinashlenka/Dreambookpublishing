@@ -35,44 +35,52 @@
 //     setLoading(false);
 //   };
 
-//   const fetchOrders = async (bookId, title) => {
-//     try {
-//       const res = await getAllOrders();
-  
-//       if (res.status && Array.isArray(res.data)) {
-//         // 1. Match orders with bookId in any line item
-//         const matched = res.data.filter(order =>
-//           order.line_items?.some(item =>
-//             item.bookId?.toString() === bookId?.toString()
-//           )
-//         );
-  
-//         if (matched.length > 0) {
-//           console.log("✅ Matched by bookId:", matched.length);
-//           setOrders(matched);
-//           return;
+// const fetchOrders = async (bookId, title) => {
+//   try {
+//     const res = await getAllOrders({ bookId }); // already filtered by bookId
+
+//     if (res.status && Array.isArray(res.data)) {
+//       let matched = [];
+
+//       // Log the data structure to understand what's inside
+//       console.log('Fetched Orders:', res.data);
+
+//       // Match WooCommerce, Amazon, and Flipkart orders by bookId in line_items
+//       matched = res.data.filter(order => {
+//         if (order.line_items && order.line_items.length > 0) {
+//           // Match by bookId in line_items (For WooCommerce, Flipkart, etc.)
+//           return order.line_items.some(item => item.bookId?.toString() === bookId.toString());
+//         } else if (order.source === "amazon" && order.bookId?.toString() === bookId.toString()) {
+//           // For Amazon orders, check directly in the order if no line_items exist
+//           return true;
 //         }
-  
-//         // 2. Fallback: Match by title (if bookId not found)
-//         const fallback = res.data.filter(order =>
-//           order.line_items?.some(item =>
-//             item.name?.toLowerCase().includes(title.toLowerCase())
-//           )
+//         console.log(`Order without line items found for source ${order.source}:`, order);
+//         return false;
+//       });
+
+//       // If no direct match, try fallback matching by title or other fields
+//       if (matched.length === 0) {
+//         console.log('No direct match found. Trying fallback by title...');
+//         const fallback = res.data.filter(order => 
+//           order.line_items?.some(item => item.name?.toLowerCase().includes(title.toLowerCase())) ||
+//           order.id?.toLowerCase().includes(title.toLowerCase()) // Fallback match by ID or other fields
 //         );
-  
-//         if (fallback.length > 0) {
-//           console.log("🟡 Fallback matched by title:", fallback.length);
-//           setOrders(fallback);
-//         } else {
-//           console.warn("⚠️ No matching orders for this book");
-//           setOrders([]);
-//         }
+//         matched = fallback;
 //       }
-//     } catch (err) {
-//       console.error("❌ Failed to fetch orders:", err);
-//       setOrders([]);
+
+//       if (matched.length > 0) {
+//         console.log(`✅ Matched ${matched.length} orders for bookId: ${bookId}`);
+//         setOrders(matched);
+//       } else {
+//         console.warn("⚠️ No matching orders found for this book");
+//         setOrders([]);
+//       }
 //     }
-//   };
+//   } catch (err) {
+//     console.error("❌ Failed to fetch orders:", err);
+//     setOrders([]);
+//   }
+// };
 
 //   const updateStatus = async (status) => {
 //     setLoading(true);
@@ -99,9 +107,10 @@
 //   useEffect(() => {
 //     const bookId = router.query.id;
 //     if (bookId && data.title) {
-//       fetchOrders(bookId, data.title);
+//       fetchOrders(bookId, data.title); // 👈 bookId must change per book
 //     }
-//   }, [data.title, router.query.id]);
+//   }, [data.title, router.query.id]); // 👈 Make sure this updates when ID changes
+
 //   const allPlatforms = ['amazon', 'flipkart', 'woocommerce'];
 
 //   const platformLabels = {
@@ -114,44 +123,58 @@
 //     switch (platform) {
 //       case 'amazon': return '/images/amazon.jpg';
 //       case 'flipkart': return '/images/flipkart.png';
-//       case 'woocommerce': return '/images/dreambooks.png'; // show DreamBook logo
+//       case 'woocommerce': return '/images/dreambooks.png';
 //       default: return '';
 //     }
 //   };
 
 //   const platformWiseSummary = () => {
 //     const summary = {};
-
+  
 //     orders.forEach((order) => {
 //       const platform = order.source?.toLowerCase();
 //       if (!platform || !allPlatforms.includes(platform)) return;
-
+  
 //       order.line_items?.forEach((item) => {
+//         // ✅ Ensure it's only this book's sales
+//         if (item.bookId?.toString() !== data._id?.toString()) return;
+  
 //         const quantity = parseInt(item.quantity || 0);
 //         const itemPrice = parseFloat(item.price || 0);
-//         const totalAmount = parseFloat(order.total || 0);
-
+//         const totalAmount = itemPrice * quantity; // precise total
+  
 //         if (!summary[platform]) {
 //           summary[platform] = {
 //             sales: 0,
 //             price: itemPrice,
 //             returned: 0,
 //             totalEarnings: 0,
-//             returnRoyalty: 0
+//             returnRoyalty: 0,
 //           };
 //         }
-
+  
 //         summary[platform].sales += quantity;
 //         summary[platform].totalEarnings += totalAmount;
 //       });
 //     });
-
+  
 //     return summary;
 //   };
 
 //   const platformSummary = platformWiseSummary();
 
 //   const totalPayAmount = Object.values(platformSummary).reduce((sum, item) => sum + (item.totalEarnings - item.returnRoyalty), 0);
+
+//   const bookSales = orders.flatMap(order =>
+//     order.line_items
+//       ?.filter(item => item.bookId?.toString() === data._id?.toString())
+//       .map(item => ({
+//         platform: order.source,
+//         quantity: item.quantity || 1,
+//         price: item.price || 0,
+//         date: new Date(order.createdAt).toLocaleDateString(),
+//       }))
+//   ) || [];
 
 //   const openRazorpay = () => {
 //     const options = {
@@ -194,7 +217,6 @@
 
 //       {loading ? <Loader /> : (
 //         <>
-//           {/* Book info section */}
 //           <div className="w-full bg-[#FDFCFF] mt-5 rounded-lg p-5">
 //             <div className="w-full flex flex-wrap items-start justify-between relative">
 //               <div className="w-5/12">
@@ -234,7 +256,6 @@
 //             </div>
 //           </div>
 
-//           {/* Sales Overview */}
 //           {data.status === 'approved' && (
 //             <SalesOverview
 //               data={data}
@@ -248,6 +269,7 @@
 //               allPlatforms={allPlatforms}
 //               getPlatformImage={getPlatformImage}
 //               platformLabels={platformLabels}
+//               bookSales={bookSales}
 //             />
 //           )}
 //         </>
@@ -274,7 +296,7 @@ import { editBook, getSingleBook } from '@/services/APIs/books';
 import { getAllOrders } from '@/services/APIs/orders';
 import Script from 'next/script';
 import SalesOverview from '@/components/SalesOverview';
-import toast from '@/Utilities/toasters';
+import { toast } from '@/Utilities/toasters';
 
 export default function BookDetail({ role }) {
   const router = useRouter();
@@ -299,52 +321,63 @@ export default function BookDetail({ role }) {
     setLoading(false);
   };
 
-const fetchOrders = async (bookId, title) => {
-  try {
-    const res = await getAllOrders({ bookId }); // already filtered by bookId
-
-    if (res.status && Array.isArray(res.data)) {
-      let matched = [];
-
-      // Log the data structure to understand what's inside
-      console.log('Fetched Orders:', res.data);
-
-      // Match WooCommerce, Amazon, and Flipkart orders by bookId in line_items
-      matched = res.data.filter(order => {
-        if (order.line_items && order.line_items.length > 0) {
-          // Match by bookId in line_items (For WooCommerce, Flipkart, etc.)
-          return order.line_items.some(item => item.bookId?.toString() === bookId.toString());
-        } else if (order.source === "amazon" && order.bookId?.toString() === bookId.toString()) {
-          // For Amazon orders, check directly in the order if no line_items exist
-          return true;
+  const fetchOrders = async (bookId, title) => {
+    try {
+      const res = await getAllOrders({ bookId });
+  
+      if (res.status && Array.isArray(res.data)) {
+        let matched = [];
+  
+        console.log('Fetched Orders:', res.data);
+  
+        // Match WooCommerce, Amazon, and Flipkart orders
+        matched = res.data.filter(order => {
+          console.log('Processing Order:', order); // Log the entire order object
+  
+          if (order.line_items && order.line_items.length > 0) {
+            // Match by bookId in line_items for WooCommerce and Flipkart
+            return order.line_items.some(item => item.bookId?.toString() === bookId.toString());
+          }
+  
+          // For Amazon orders: Directly match the bookId in the order object (not in line_items)
+          else if (order.source === "amazon") {
+            console.log('Amazon order detected:', order); // Log Amazon order details
+  
+            // Check if `bookId` exists directly in the order object (not in line_items)
+            if (order.bookId?.toString() === bookId.toString()) {
+              console.log('Matched Amazon order:', order);
+              return true;
+            } else {
+              console.log('Amazon order does not match bookId:', order.bookId);
+            }
+          }
+  
+          return false;
+        });
+  
+        // If no direct match, try fallback matching by title or other fields
+        if (matched.length === 0) {
+          console.log('No direct match found. Trying fallback by title...');
+          const fallback = res.data.filter(order => 
+            order.line_items?.some(item => item.name?.toLowerCase().includes(title.toLowerCase())) ||
+            order.id?.toLowerCase().includes(title.toLowerCase()) // Fallback match by ID or other fields
+          );
+          matched = fallback;
         }
-        console.log(`Order without line items found for source ${order.source}:`, order);
-        return false;
-      });
-
-      // If no direct match, try fallback matching by title or other fields
-      if (matched.length === 0) {
-        console.log('No direct match found. Trying fallback by title...');
-        const fallback = res.data.filter(order => 
-          order.line_items?.some(item => item.name?.toLowerCase().includes(title.toLowerCase())) ||
-          order.id?.toLowerCase().includes(title.toLowerCase()) // Fallback match by ID or other fields
-        );
-        matched = fallback;
+  
+        if (matched.length > 0) {
+          console.log(`✅ Matched ${matched.length} orders for bookId: ${bookId}`);
+          setOrders(matched);
+        } else {
+          console.warn("⚠️ No matching orders found for this book");
+          setOrders([]);
+        }
       }
-
-      if (matched.length > 0) {
-        console.log(`✅ Matched ${matched.length} orders for bookId: ${bookId}`);
-        setOrders(matched);
-      } else {
-        console.warn("⚠️ No matching orders found for this book");
-        setOrders([]);
-      }
+    } catch (err) {
+      console.error("❌ Failed to fetch orders:", err);
+      setOrders([]);
     }
-  } catch (err) {
-    console.error("❌ Failed to fetch orders:", err);
-    setOrders([]);
-  }
-};
+  };
 
   const updateStatus = async (status) => {
     setLoading(true);

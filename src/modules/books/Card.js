@@ -116,6 +116,15 @@ export default function Card({ data, variant }) {
       console.warn("❌ Book ID is missing.");
     }
   };
+  const price = data?.price;
+  const offerPrice = data?.offerPrice;
+  const offerExpiry = data?.offerExpiry;
+
+  // Check if offer is still valid
+  const isOfferValid =
+    offerPrice &&
+    (!offerExpiry || new Date(offerExpiry) > new Date());
+
 
   return (
     <div className="w-full min-h-[300px] bg-white card-shadow rounded-2xl flex flex-col justify-between p-3">
@@ -140,6 +149,18 @@ export default function Card({ data, variant }) {
           {data.author?.name || "Unknown Author"}
         </h4>
       </div>
+
+      <div className="mt-2 text-start">
+  {isOfferValid ? (
+    <div className="flex gap-2 items-center">
+      <span className="text-sm text-gray-500 line-through">₹{price}</span>
+      <span className="text-sm text-green-600 font-semibold">₹{offerPrice}</span>
+    </div>
+  ) : (
+    <span className="text-sm text-black font-semibold">₹{price}</span>
+  )}
+</div>
+
 
       <Button variant="primary" onClick={handleView} className="mt-3">
         View

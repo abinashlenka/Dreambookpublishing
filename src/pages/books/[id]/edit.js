@@ -177,6 +177,11 @@ export default function Create({role}) {
           const category = formData.get("category");
           const language = formData.get("language");
           const price = formData.get("price");
+          const offerPrice = formData.get("offer-price");
+let offerExpiry = formData.get("offer-expiry");
+if (formData.get("offer-expiry-type") === "lifetime") {
+  offerExpiry = null;
+}
           const platforms = [];
       
           if (bindingType === 0) {
@@ -390,6 +395,26 @@ export default function Create({role}) {
                     <label className='w-full text-[#555555] font-medium mb-2 text-sm'>Book Price<sup className='text-red-500'>*</sup></label>
                     <Input type={"number"} name={"price"} placeholder={"₹50"} defaultValue={data?.price} />
                 </div>
+                <div className='grid grid-cols-3 gap-x-3 mb-5'>
+  <div className='w-full flex flex-wrap'>
+    <label className='w-full text-[#555555] font-medium mb-2 text-sm'>Offer Price <span className='opacity-50'>(Optional)</span></label>
+    <Input type="number" name="offer-price" placeholder="₹40" defaultValue={data?.offerPrice || ''} />
+  </div>
+
+  <div className='w-full flex flex-wrap'>
+    <label className='w-full text-[#555555] font-medium mb-2 text-sm'>Offer Expiry <span className='opacity-50'>(Optional)</span></label>
+    <input type="date" name="offer-expiry" defaultValue={data?.offerExpiry ? data?.offerExpiry.slice(0, 10) : ''} className="w-full bg-[#F3F3F3] peer focus:outline-none font-inter rounded-lg px-3 py-2.5 font-normal text-sm text-black" />
+  </div>
+
+  <div className='w-full flex flex-wrap'>
+    <label className='w-full text-[#555555] font-medium mb-2 text-sm'>Expiry Type</label>
+    <select name="offer-expiry-type" defaultValue={data?.offerExpiry ? 'date' : 'lifetime'} className="w-full bg-[#F3F3F3] peer focus:outline-none font-inter rounded-lg px-3 py-2.5 font-normal text-sm text-black">
+      <option value="date">Specific Date</option>
+      <option value="lifetime">Lifetime</option>
+    </select>
+  </div>
+</div>
+
 
                 <div className='w-full flex flex-wrap mb-5'>
                     <label className='w-full text-[rgb(85,85,85)] font-medium mb-2 text-sm'>Choose Binding Size<span className='text-red-500'>*</span></label>
@@ -410,6 +435,8 @@ export default function Create({role}) {
                         </div>
                     </div>
                 </div>
+
+                
 
                 <div className='w-full flex flex-wrap mb-5'>
                     <label className='w-full text-[#555555] font-medium mb-2 text-sm'>Choose publication<span className='text-red-500'>*</span></label>
