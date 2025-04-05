@@ -1,22 +1,30 @@
-import { toast } from 'sonner';
+// 📁 Utilities/toasters.js
+import { toast as sonnerToast } from 'sonner';
+
+export const toast = sonnerToast; // ✅ Add this line
 
 export const defaultMessage = (message) => {
-    toast(`${message}`)
-}
+  sonnerToast(`${message}`);
+};
+
 export const successMessage = (message) => {
-    toast.success(`${message}`)
-}
+  sonnerToast.success(`${message}`);
+};
+
 export const errorMessage = (message) => {
-    toast.error(`${message}`)
-}
+  sonnerToast.error(`${message}`);
+};
+
 export const infoMessage = (message) => {
-    toast.info(`${message}`)
-}
+  sonnerToast.info(`${message}`);
+};
+
 export const warningMessage = (message) => {
-    toast.warning(`${message}`)
-}
+  sonnerToast.warning(`${message}`);
+};
+
 export const descriptionMessage = (message, description) => {
-    toast.message(message, {
-        description: description,
-    })
-}
+  sonnerToast.message(message, {
+    description: description,
+  });
+};

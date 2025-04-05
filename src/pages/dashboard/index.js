@@ -22,6 +22,9 @@ export default function Index({ role }) {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   });
 
+  const [bookPage, setBookPage] = useState(1);
+  const booksPerPage = 10;
+
   const fetchDashboardData = async () => {
     const bookRes = await getAllBooks({ page: 1, limit: 1000 });
     const books = Array.isArray(bookRes?.data) ? bookRes.data : [];
@@ -90,11 +93,15 @@ export default function Index({ role }) {
         total: `₹${val.total.toFixed(2)}`
       })));
 
-      setBookStats(Object.entries(bookMap).map(([title, val]) => ({
-        title,
-        quantity: val.quantity,
-        total: `₹${val.earnings.toFixed(2)}`
-      })));
+      const sortedBooks = Object.entries(bookMap)
+        .map(([title, val]) => ({
+          title,
+          quantity: val.quantity,
+          total: val.earnings,
+        }))
+        .sort((a, b) => b.total - a.total);
+
+      setBookStats(sortedBooks);
 
       setTopAuthors(Object.entries(authorMap).map(([name, val]) => {
         const returned = 2;
@@ -123,6 +130,12 @@ export default function Index({ role }) {
   useEffect(() => {
     fetchSalesData();
   }, [selectedMonth]);
+
+  const paginatedBooks = bookStats.slice(
+    (bookPage - 1) * booksPerPage,
+    bookPage * booksPerPage
+  );
+  const totalBookPages = Math.ceil(bookStats.length / booksPerPage);
 
   const cards = [
     {
@@ -235,6 +248,49 @@ export default function Index({ role }) {
             })}
           </tbody>
         </Table>
+      </div>
+
+      {/* ✅ Book Wise Report - Sorted & Paginated */}
+      <div className="w-full bg-white rounded-lg p-4 mt-6">
+        <h2 className="text-base font-semibold mb-3">Book-wise Sales</h2>
+        <Table>
+          <thead>
+            <tr className="border-b-1.5">
+              <th className="text-left">Title</th>
+              <th className="text-center">Quantity</th>
+              <th className="text-center">Total Earnings</th>
+            </tr>
+          </thead>
+          <tbody>
+            {paginatedBooks.map((book, i) => (
+              <tr key={i} className="border-b-1.5">
+                <td>{book.title}</td>
+                <td className="text-center">{book.quantity}</td>
+                <td className="text-center">₹{book.total.toFixed(2)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+
+        <div className="flex justify-end mt-4 gap-2">
+          <button
+            onClick={() => setBookPage((p) => Math.max(p - 1, 1))}
+            disabled={bookPage === 1}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
+            Prev
+          </button>
+          <span className="px-2 py-1 text-sm">
+            Page {bookPage} of {totalBookPages}
+          </span>
+          <button
+            onClick={() => setBookPage((p) => Math.min(p + 1, totalBookPages))}
+            disabled={bookPage === totalBookPages}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
       </div>
 
       {/* ✅ Top Authors Table */}
