@@ -220,12 +220,13 @@ export default function FilterBar(props) {
           <path d="..." fill="#B3B2BD" />
         </svg>
         <input
-          type="text"
-          value={keyword}
-          onChange={searchHandler}
-          className="w-10/12 outline-none"
-          placeholder="Search"
-        />
+  type="text"
+  value={keyword}
+  onChange={searchHandler}
+  className="w-10/12 outline-none"
+  placeholder={props.placeholder || "Search"}
+/>
+
       </div>
 
       {props.sort && (

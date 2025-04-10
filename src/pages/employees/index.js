@@ -306,6 +306,7 @@ export default function Index({ role }) {
           sort={true}
           handler={filterHandler}
           debouncedHandler={debouncedFilterHandler}
+          placeholder="Search by employee name"
           currentFilters={filters}
           statusOptions={[
             { label: "All", value: "" },

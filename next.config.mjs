@@ -4,7 +4,8 @@ const nextConfig = {
   images: {
     domains: [
       'dreambookcoverbucket.s3.ap-south-1.amazonaws.com',
-      'm.media-amazon.com' // ✅ Add this line
+      'm.media-amazon.com',
+      'www.dreambookpublishing.com' // ✅ Now it's correct
     ],
   },
 };

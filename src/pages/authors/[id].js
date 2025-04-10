@@ -116,7 +116,7 @@ export default function Index({role}) {
           </div>
         </div>
 
-        <div className='w-full bg-white rounded-lg p-4 mt-5'>
+       {/* {<div className='w-full bg-white rounded-lg p-4 mt-5'>
           <h2 className='font-medium mb-3 text-sm'>Payments History</h2>
           <Table>
             <thead>
@@ -172,7 +172,7 @@ export default function Index({role}) {
               </tr>
             </tbody>
           </Table>
-        </div>
+        </div>} */}
       </>}
     </Layout>
   )

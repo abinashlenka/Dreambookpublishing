@@ -1045,13 +1045,15 @@ export default function Index({ role }) {
       </div>
 
       <div className="w-full mt-5 bg-white rounded-md p-4">
-        <FilterBar
-          data={data}
-          sort={true}
-          handler={filterHandler}
-          debouncedHandler={debouncedFilterHandler}
-          currentFilters={filters}
-        />
+      <FilterBar
+  data={data}
+  sort={true}
+  handler={filterHandler}
+  debouncedHandler={debouncedFilterHandler}
+  currentFilters={filters}
+  placeholder="Search by book name, author"
+/>
+
 
         {loading ? (
           <Loader />
