@@ -25,11 +25,20 @@ export default function Index({ role }) {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   });
 
+<<<<<<< HEAD
   const [searchRoyalties, setSearchRoyalties] = useState("");
   const [showPaid, setShowPaid] = useState(false);
   const [royaltyFilters, setRoyaltyFilters] = useState({ page: 1, limit: 5 });
   const [royaltyPaginationData, setRoyaltyPaginationData] = useState(null);
   const [selectedRoyalty, setSelectedRoyalty] = useState(null);
+=======
+  const [bookPage, setBookPage] = useState(1);
+  const booksPerPage = 10;
+
+  const fetchDashboardData = async () => {
+    const bookRes = await getAllBooks({ page: 1, limit: 1000 });
+    const books = Array.isArray(bookRes?.data) ? bookRes.data : [];
+>>>>>>> 4dcc93816a8ea130867bb6831906e3740d249ac6
 
   const [modalPage, setModalPage] = useState(1);
   const [modalSearch, setModalSearch] = useState("");
@@ -67,7 +76,143 @@ export default function Index({ role }) {
       totalPages: Math.ceil(total / royaltyFilters.limit),
       totalResults: total,
     });
+<<<<<<< HEAD
   }, [royalties, royaltyFilters, searchRoyalties, selectedMonth, showPaid]);
+=======
+  };
+
+  const fetchSalesData = async () => {
+    try {
+      const res = await axios.get("https://dream-book-backend-main.vercel.app/api/orders");
+      const orders = res.data?.data || [];
+
+      const selectedDate = new Date(selectedMonth + "-01");
+      const selectedYear = selectedDate.getFullYear();
+      const selectedMonthIndex = selectedDate.getMonth();
+
+      const filteredOrders = orders.filter(order => {
+        const orderDate = new Date(order.createdAt);
+        return (
+          orderDate.getFullYear() === selectedYear &&
+          orderDate.getMonth() === selectedMonthIndex
+        );
+      });
+
+      const platformMap = {};
+      const bookMap = {};
+      const authorMap = {};
+      let totalSales = 0;
+
+      filteredOrders.forEach((order) => {
+        const platform = order.source || "Unknown";
+        const total = parseFloat(order.total || 0);
+        platformMap[platform] = platformMap[platform] || { total: 0, count: 0 };
+        platformMap[platform].total += total;
+        platformMap[platform].count += 1;
+        totalSales += total;
+
+        order.line_items?.forEach((item) => {
+          const title = item.name;
+          const author = item.author || "Unknown Author";
+          const qty = item.quantity || 1;
+          const price = parseFloat(item.price || 0);
+
+          bookMap[title] = bookMap[title] || { quantity: 0, earnings: 0 };
+          bookMap[title].quantity += qty;
+          bookMap[title].earnings += price;
+
+          authorMap[author] = authorMap[author] || { sales: 0, earnings: 0 };
+          authorMap[author].sales += qty;
+          authorMap[author].earnings += price;
+        });
+      });
+
+      setPlatformStats(Object.entries(platformMap).map(([p, val]) => ({
+        platform: p,
+        quantity: val.count,
+        total: `₹${val.total.toFixed(2)}`
+      })));
+
+      const sortedBooks = Object.entries(bookMap)
+        .map(([title, val]) => ({
+          title,
+          quantity: val.quantity,
+          total: val.earnings,
+        }))
+        .sort((a, b) => b.total - a.total);
+
+      setBookStats(sortedBooks);
+
+      setTopAuthors(Object.entries(authorMap).map(([name, val]) => {
+        const returned = 2;
+        const returnRoyalty = val.earnings * 0.1;
+        const toPay = val.earnings - returnRoyalty;
+        return {
+          name,
+          sales: val.sales,
+          earnings: val.earnings,
+          returned,
+          returnRoyalty,
+          toPay,
+        };
+      }));
+
+      setTotalSalesAmount(totalSales);
+    } catch (err) {
+      console.error("Failed to fetch order data", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  useEffect(() => {
+    fetchSalesData();
+  }, [selectedMonth]);
+
+  const paginatedBooks = bookStats.slice(
+    (bookPage - 1) * booksPerPage,
+    bookPage * booksPerPage
+  );
+  const totalBookPages = Math.ceil(bookStats.length / booksPerPage);
+
+  const cards = [
+    {
+      title: "Platform Earnings",
+      value: `₹${dashboardData.platformEarnings}`,
+      bgColor: "#E9FFE0",
+    },
+    {
+      title: "Total Royalty",
+      value: `₹${dashboardData.totalRoyalty}`,
+      bgColor: "#FFE9E0",
+    },
+    {
+      title: "Total Books",
+      value: dashboardData.totalBooks,
+      bgColor: "#FFEAFB",
+    },
+    {
+      title: "Total Sale",
+      value: dashboardData.totalSales,
+      bgColor: "#E6E9FF",
+    },
+    {
+      title: "Total Authors",
+      value: dashboardData.totalAuthors,
+      bgColor: "#FFF6E4",
+    }
+  ];
+
+  const iconMap = {
+    "Platform Earnings": "Totalplatform.png",
+    "Total Royalty": "Totalroyalty.png",
+    "Total Books": "Totalbooks.png",
+    "Total Sale": "Totalsale.png",
+    "Total Authors": "Totalauthors.png"
+  };
+>>>>>>> 4dcc93816a8ea130867bb6831906e3740d249ac6
 
   return (
     <Layout role={role}>
@@ -138,8 +283,56 @@ export default function Index({ role }) {
         </Table>
       </div>
 
+<<<<<<< HEAD
       {/* Top Authors */}
       <div className="w-full bg-white rounded-lg p-4 mb-6">
+=======
+      {/* ✅ Book Wise Report - Sorted & Paginated */}
+      <div className="w-full bg-white rounded-lg p-4 mt-6">
+        <h2 className="text-base font-semibold mb-3">Book-wise Sales</h2>
+        <Table>
+          <thead>
+            <tr className="border-b-1.5">
+              <th className="text-left">Title</th>
+              <th className="text-center">Quantity</th>
+              <th className="text-center">Total Earnings</th>
+            </tr>
+          </thead>
+          <tbody>
+            {paginatedBooks.map((book, i) => (
+              <tr key={i} className="border-b-1.5">
+                <td>{book.title}</td>
+                <td className="text-center">{book.quantity}</td>
+                <td className="text-center">₹{book.total.toFixed(2)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+
+        <div className="flex justify-end mt-4 gap-2">
+          <button
+            onClick={() => setBookPage((p) => Math.max(p - 1, 1))}
+            disabled={bookPage === 1}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
+            Prev
+          </button>
+          <span className="px-2 py-1 text-sm">
+            Page {bookPage} of {totalBookPages}
+          </span>
+          <button
+            onClick={() => setBookPage((p) => Math.min(p + 1, totalBookPages))}
+            disabled={bookPage === totalBookPages}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      </div>
+
+      {/* ✅ Top Authors Table */}
+      <div className="w-full bg-white rounded-lg p-4 mt-6">
+>>>>>>> 4dcc93816a8ea130867bb6831906e3740d249ac6
         <h2 className="text-base font-semibold mb-3">Top Rated Authors</h2>
         <Table>
           <thead>
@@ -296,5 +489,12 @@ export default function Index({ role }) {
 
 export async function getServerSideProps({ req }) {
   const role = req.cookies._r || null;
+<<<<<<< HEAD
   return { props: { role } };
 }
+=======
+  return {
+    props: { role },
+  };
+}
+>>>>>>> 4dcc93816a8ea130867bb6831906e3740d249ac6

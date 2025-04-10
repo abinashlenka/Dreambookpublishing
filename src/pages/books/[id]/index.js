@@ -68,11 +68,14 @@ export default function BookDetail({ role }) {
         }
 
         setOrders(matched);
+<<<<<<< HEAD
       } else if (res.message?.toLowerCase().includes('session')) {
         toast('Session expired. Please login again', 'error');
         router.push('/auth/signin');  // Fixed login route
       } else {
         toast(res.message || 'Failed to fetch orders', 'error');
+=======
+>>>>>>> 4dcc93816a8ea130867bb6831906e3740d249ac6
       }
     } catch (err) {
       console.error("❌ Failed to fetch orders:", err);
@@ -87,6 +90,7 @@ export default function BookDetail({ role }) {
   };
 
   const updateStatus = async (status) => {
+<<<<<<< HEAD
     try {
       setIsUpdating(true);
       setLoading(true);
@@ -111,6 +115,17 @@ export default function BookDetail({ role }) {
       toast('An error occurred while updating book status', 'error');
     } finally {
       setIsUpdating(false);
+=======
+    setLoading(true);
+    const bookId = router.query.id;
+    const payload = new FormData();
+    payload.append('status', status);
+    const res = await editBook(payload, bookId);
+    if (res.status) {
+      toast(`Book ${status} successfully`, 'success');
+      fetchData(bookId);
+    } else {
+>>>>>>> 4dcc93816a8ea130867bb6831906e3740d249ac6
       setLoading(false);
     }
   };
@@ -178,6 +193,7 @@ export default function BookDetail({ role }) {
   const platformSummary = platformWiseSummary();
   const totalPayAmount = Object.values(platformSummary).reduce((sum, item) => sum + (item.totalEarnings - item.returnRoyalty), 0);
 
+<<<<<<< HEAD
   const bookSales = orders.flatMap(order => 
     (order.line_items || [])
       .filter(item => item.bookId?.toString() === data._id?.toString())
@@ -188,6 +204,16 @@ export default function BookDetail({ role }) {
         date: new Date(order.createdAt).toLocaleDateString()
       }))
   );
+=======
+  const bookSales = orders.flatMap(order =>
+    order.line_items?.filter(item => item.bookId?.toString() === data._id?.toString()).map(item => ({
+      platform: order.source,
+      quantity: item.quantity || 1,
+      price: item.price || 0,
+      date: new Date(order.createdAt).toLocaleDateString(),
+    }))
+  ) || [];
+>>>>>>> 4dcc93816a8ea130867bb6831906e3740d249ac6
 
   const openRazorpay = () => {
     const options = {
@@ -243,9 +269,15 @@ export default function BookDetail({ role }) {
                     <Badge variant={data.status} className="capitalize px-3 py-1 text-sm">{data.status}</Badge>
                     {permissionHandler('editBook', role) && (
                       <select
+<<<<<<< HEAD
                       className="bg-white border border-gray-300 text-sm rounded-md px-2 py-1 shadow-sm focus:outline-none"
     value={data.status}
     onChange={(e) => updateStatus(e.target.value)}
+=======
+                        className="bg-white border border-gray-300 text-sm rounded-md px-2 py-1 shadow-sm focus:outline-none"
+                        value={data.status}
+                        onChange={(e) => updateStatus(e.target.value)}
+>>>>>>> 4dcc93816a8ea130867bb6831906e3740d249ac6
                       >
                         <option value="pending">Pending</option>
                         <option value="approved">Approved</option>
@@ -267,7 +299,15 @@ export default function BookDetail({ role }) {
 
                 <h3 className="text-light-grey mt-6 text-sm font-semibold">Book Info</h3>
                 <div className="my-3 w-full grid grid-cols-3 gap-3 py-2.5 px-5 border rounded-md border-gray-200">
-                  <div><h4 className="font-semibold">Price</h4><h4>₹{data.price}</h4></div>
+                  <div>
+                    <h4 className="font-semibold">Price</h4>
+                    {data.offer?.price ? (
+                      <>
+                        <h4><span className="line-through text-red-500 mr-2">₹{data.price}</span><span className="text-green-600 font-bold">₹{data.offer.price}</span></h4>
+                      </>
+                    ) : <h4>₹{data.price}</h4>}
+                  </div>
+
                   <div><h4 className="font-semibold">Genre</h4><h4>{data.categories?.[0]}</h4></div>
                   <div><h4 className="font-semibold">Author</h4><h4>{data.author?.name}</h4></div>
                   <div><h4 className="font-semibold">Type</h4><h4>{bookType[data.bindingSize?.[0]] || 'N/A'}</h4></div>
